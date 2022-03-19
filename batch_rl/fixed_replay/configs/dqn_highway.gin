@@ -1,0 +1,34 @@
+# Hyperparameters for a simple DQN-style Cartpole agent. The hyperparameters
+# chosen achieve reasonable performance.
+import dopamine.discrete_domains.highway_lib
+import batch_rl.fixed_replay.run_experiment
+import batch_rl.fixed_replay.replay_memory.fixed_replay_buffer
+import batch_rl.fixed_replay.agents.dqn_agent
+import gin.tf.external_configurables
+
+FixedReplayDQNAgent.observation_shape = %highway_lib.HIGHWAY_OBSERVATION_SHAPE
+FixedReplayDQNAgent.observation_dtype = %highway_lib.HIGHWAY_OBSERVATION_DTYPE
+FixedReplayDQNAgent.stack_size = %highway_lib.HIGHWAY_STACK_SIZE
+FixedReplayDQNAgent.network = @highway_lib.HighwayDQNNetwork
+FixedReplayDQNAgent.gamma = 0.8
+FixedReplayDQNAgent.update_horizon = 1
+FixedReplayDQNAgent.min_replay_history = 200
+FixedReplayDQNAgent.update_period = 1
+FixedReplayDQNAgent.target_update_period = 50
+FixedReplayDQNAgent.epsilon_fn = @dqn_agent.identity_epsilon
+FixedReplayDQNAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
+FixedReplayDQNAgent.optimizer = @tf.train.AdamOptimizer()
+
+tf.train.AdamOptimizer.learning_rate = 1e-4
+tf.train.AdamOptimizer.epsilon = 0.0003125
+
+create_gym_environment.environment_name = 'highway-fast'
+create_gym_environment.version = 'v0'
+FixedReplayRunner.create_environment_fn = @highway_lib.create_gym_environment
+FixedReplayRunner.num_iterations = 3000
+FixedReplayRunner.training_steps = 1000
+FixedReplayRunner.evaluation_steps = 200
+# FixedReplayRunner.max_steps_per_episode = 200  # Default max episode length.
+
+WrappedFixedReplayBuffer.replay_capacity = 15000
+WrappedFixedReplayBuffer.batch_size = 128

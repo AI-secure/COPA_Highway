@@ -1,0 +1,40 @@
+# Hyperparameters follow Dabney et al. (2017) but we modify as necessary to
+# match those used in Rainbow (Hessel et al., 2018), to ensure apples-to-apples
+# comparison.
+import batch_rl.fixed_replay.agents.quantile_agent
+import dopamine.discrete_domains.highway_lib
+import batch_rl.fixed_replay.run_experiment
+import batch_rl.fixed_replay.replay_memory.fixed_replay_buffer
+import gin.tf.external_configurables
+
+FixedReplayQuantileAgent.observation_shape = %highway_lib.HIGHWAY_OBSERVATION_SHAPE
+FixedReplayQuantileAgent.observation_dtype = %highway_lib.HIGHWAY_OBSERVATION_DTYPE
+FixedReplayQuantileAgent.stack_size = %highway_lib.HIGHWAY_STACK_SIZE
+FixedReplayQuantileAgent.network = @highway_lib.HighwayQuantileNetwork
+FixedReplayQuantileAgent.num_atoms = 200
+FixedReplayQuantileAgent.gamma = 0.8
+FixedReplayQuantileAgent.update_horizon = 1
+FixedReplayQuantileAgent.min_replay_history = 200 # agent steps
+FixedReplayQuantileAgent.update_period = 1
+FixedReplayQuantileAgent.target_update_period = 50 # agent steps
+FixedReplayQuantileAgent.epsilon_train = 0.01
+FixedReplayQuantileAgent.epsilon_eval = 0.001
+FixedReplayQuantileAgent.epsilon_decay_period = 2500 # agent steps
+FixedReplayQuantileAgent.replay_scheme = 'uniform'
+FixedReplayQuantileAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
+FixedReplayQuantileAgent.optimizer = @tf.train.AdamOptimizer()
+
+tf.train.AdamOptimizer.learning_rate = 0.0001
+tf.train.AdamOptimizer.epsilon = 0.0003125
+
+create_gym_environment.environment_name = 'highway-fast'
+create_gym_environment.version = 'v0'
+create_agent.agent_name = 'qrdqn'
+FixedReplayRunner.create_environment_fn = @highway_lib.create_gym_environment
+FixedReplayRunner.num_iterations = 3000
+FixedReplayRunner.training_steps = 1000
+FixedReplayRunner.evaluation_steps = 200
+FixedReplayRunner.max_steps_per_episode = 200  # Default max episode length.
+
+WrappedFixedReplayBuffer.replay_capacity = 15000
+WrappedFixedReplayBuffer.batch_size = 32

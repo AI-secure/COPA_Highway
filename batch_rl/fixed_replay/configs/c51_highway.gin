@@ -1,0 +1,41 @@
+# Hyperparameters for a simple C51-style Cartpole agent. The hyperparameters
+# chosen achieve reasonable performance.
+import dopamine.agents.dqn.dqn_agent
+import dopamine.agents.rainbow.rainbow_agent
+import dopamine.discrete_domains.highway_lib
+import batch_rl.fixed_replay.run_experiment
+import batch_rl.fixed_replay.replay_memory.fixed_replay_buffer
+import gin.tf.external_configurables
+
+FixedReplayRainbowAgent.observation_shape = %highway_lib.HIGHWAY_OBSERVATION_SHAPE
+FixedReplayRainbowAgent.observation_dtype = %highway_lib.HIGHWAY_OBSERVATION_DTYPE
+FixedReplayRainbowAgent.stack_size = %highway_lib.HIGHWAY_STACK_SIZE
+FixedReplayRainbowAgent.network = @highway_lib.HighwayRainbowNetwork
+FixedReplayRainbowAgent.num_atoms = 201
+FixedReplayRainbowAgent.vmax = 50.
+FixedReplayRainbowAgent.gamma = 0.8
+FixedReplayRainbowAgent.epsilon_eval = 0.
+FixedReplayRainbowAgent.epsilon_train = 0.01
+FixedReplayRainbowAgent.update_horizon = 1
+FixedReplayRainbowAgent.min_replay_history = 500
+FixedReplayRainbowAgent.update_period = 1
+FixedReplayRainbowAgent.target_update_period = 50
+FixedReplayRainbowAgent.epsilon_fn = @dqn_agent.identity_epsilon
+FixedReplayRainbowAgent.replay_scheme = 'uniform'
+FixedReplayRainbowAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
+FixedReplayRainbowAgent.optimizer = @tf.train.AdamOptimizer()
+
+tf.train.AdamOptimizer.learning_rate = 1e-4
+tf.train.AdamOptimizer.epsilon = 0.00000390625
+
+create_gym_environment.environment_name = 'highway-fast'
+create_gym_environment.version = 'v0'
+create_agent.agent_name = 'rainbow'
+FixedReplayRunner.create_environment_fn = @highway_lib.create_gym_environment
+FixedReplayRunner.num_iterations = 3000
+FixedReplayRunner.training_steps = 1000
+FixedReplayRunner.evaluation_steps = 200
+FixedReplayRunner.max_steps_per_episode = 200  # Default max episode length.
+
+WrappedFixedReplayBuffer.replay_capacity = 15000
+WrappedFixedReplayBuffer.batch_size = 128

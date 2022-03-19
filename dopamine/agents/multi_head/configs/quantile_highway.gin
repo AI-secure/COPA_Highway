@@ -1,0 +1,40 @@
+# Hyperparameters follow Dabney et al. (2017) but we modify as necessary to
+# match those used in Rainbow (Hessel et al., 2018), to ensure apples-to-apples
+# comparison.
+import dopamine.agents.multi_head.quantile_agent
+import dopamine.discrete_domains.highway_lib
+import dopamine.discrete_domains.run_experiment
+import dopamine.replay_memory.prioritized_replay_buffer
+import gin.tf.external_configurables
+
+QuantileAgent.observation_shape = %highway_lib.HIGHWAY_OBSERVATION_SHAPE
+QuantileAgent.observation_dtype = %highway_lib.HIGHWAY_OBSERVATION_DTYPE
+QuantileAgent.stack_size = %highway_lib.HIGHWAY_STACK_SIZE
+QuantileAgent.network = @highway_lib.HighwayQuantileNetwork
+QuantileAgent.num_atoms = 200
+QuantileAgent.gamma = 0.8
+QuantileAgent.update_horizon = 1
+QuantileAgent.min_replay_history = 200 # agent steps
+QuantileAgent.update_period = 1
+QuantileAgent.target_update_period = 50 # agent steps
+QuantileAgent.epsilon_train = 0.01
+QuantileAgent.epsilon_eval = 0.001
+QuantileAgent.epsilon_decay_period = 2500 # agent steps
+QuantileAgent.replay_scheme = 'uniform'
+QuantileAgent.tf_device = '/gpu:0'  # use '/cpu:*' for non-GPU version
+QuantileAgent.optimizer = @tf.train.AdamOptimizer()
+
+tf.train.AdamOptimizer.learning_rate = 0.0001
+tf.train.AdamOptimizer.epsilon = 0.0003125
+
+create_gym_environment.environment_name = 'highway-fast'
+create_gym_environment.version = 'v0'
+create_agent.agent_name = 'qrdqn'
+Runner.create_environment_fn = @highway_lib.create_gym_environment
+Runner.num_iterations = 1000
+Runner.training_steps = 1000
+Runner.evaluation_steps = 1000
+Runner.max_steps_per_episode = 200  # Default max episode length.
+
+WrappedPrioritizedReplayBuffer.replay_capacity = 15000
+WrappedPrioritizedReplayBuffer.batch_size = 32
